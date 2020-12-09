@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDom from 'react-dom';
+import PropTypes from 'prop-types';
 import './styles.css';
 
 /**
@@ -11,11 +12,49 @@ import './styles.css';
  */
 
 class Timer extends React.Component {
-  constructor() {
-    super();
-    this.state = { timeVisible: true };
+  constructor(props) {
+    super(props);
+    
+    this.state = {
+      timeVisible: true,
+      localTime: new Date(),
+    };
+    this.intervalId = null
   }
-
+  
+  startTimer() {
+    this.intervalId = setInterval(() => {
+      console.log('tick')
+      this.setState({
+        localTime: new Date(),
+      })
+    }, 1000)
+  }
+  
+  stopTimer() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId)
+    }
+  }
+  
+  componentDidMount() {
+    this.startTimer()
+  }
+  componentWillUnmount() {
+    this.stopTimer()
+  }
+  
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (this.state.timeVisible === prevState.timeVisible) {
+      return
+    }
+    if (this.state.timeVisible) {
+      this.startTimer()
+    } else {
+      this.stopTimer()
+    }
+  }
+  
   render() {
     const { timeVisible } = this.state;
     return (
@@ -28,25 +67,22 @@ class Timer extends React.Component {
             this.setState({ timeVisible: !timeVisible });
           }}
         />
-        {this.state.timeVisible && <TimeDisplay />}
+        {this.state.timeVisible && <TimeDisplay localTime={this.state.localTime} />}
       </div>
     );
   }
 }
 
 class TimeDisplay extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      localTime: new Date()
-    };
-  }
-
   render() {
     return (
-      <div className="time">{this.state.localTime.toLocaleTimeString()}</div>
+      <div className="time">{this.props.localTime.toLocaleTimeString()}</div>
     );
   }
+}
+
+TimeDisplay.propTypes = {
+  localTime: PropTypes.object.isRequired,
 }
 
 ReactDom.render(<Timer />, document.getElementById('app'));

@@ -19,12 +19,14 @@ import CreditCardNumber from './CreditCardNumber';
     Иначе значение с сервера нужно проигнорировать.
  */
 
+const INITIAL_STATE = {
+  value: '0000 0000 0000 0000',
+}
+
 class CreditCardInputWithRestore extends React.Component {
   constructor() {
     super();
-    this.state = {
-      value: '0000 0000 0000 0000'
-    };
+    this.state = INITIAL_STATE;
   }
 
   componentDidMount() {
@@ -35,14 +37,21 @@ class CreditCardInputWithRestore extends React.Component {
     return (
       <CreditCardInput
         value={this.state.value}
-        onChange={val => console.log(val)}
+        onChange={value => this.setState({ value })}
       />
     );
   }
 
   async restoreFromApi() {
     const value = await Api.getValue();
-    this.setState({ value: value });
+    this.setState(prevState => {
+      if (prevState.value === INITIAL_STATE.value) {
+        return { value }
+      }
+      return {
+        ...prevState
+      }
+    });
   }
 }
 
@@ -51,8 +60,17 @@ class CreditCardInput extends React.Component {
     super(props);
     this.state = { value: props.value };
   }
-
+  
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.value !== prevProps.value) {
+      this.setState({
+        value: this.props.value
+      })
+    }
+  }
+  
   render() {
+    console.log('state', this.state.value)
     return (
       <div className="root">
         <div className="form">

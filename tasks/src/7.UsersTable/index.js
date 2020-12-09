@@ -48,7 +48,7 @@ function logEvent(msg) {
   console.log(` ${generation}.${generationEvents++}\t${msg}`);
 }
 
-class Users extends React.Component {
+class Users extends React.PureComponent {
   constructor() {
     super();
     this.state = {
@@ -59,27 +59,14 @@ class Users extends React.Component {
 
   render() {
     const { users, editingUser } = this.state;
-    if (editingUser) {
-      return (
-        <div className="root">
-          <EditUserForm user={editingUser} onSave={this.handleSaveUser} />
-          <UserTable
-            users={users}
-            onEditUser={this.handleEditUser}
-            onAddUser={this.handleAddUser}
-          />
-        </div>
-      );
-    }
-    return (
-      <div className="root">
-        <UserTable
-          users={users}
-          onEditUser={this.handleEditUser}
-          onAddUser={this.handleAddUser}
-        />
-      </div>
-    );
+    return <div className="root">
+      {editingUser && <EditUserForm user={editingUser} onSave={this.handleSaveUser} />}
+      <UserTable
+        users={users}
+        onEditUser={this.handleEditUser}
+        onAddUser={this.handleAddUser}
+      />
+    </div>
   }
 
   handleAddUser = () => {
@@ -106,7 +93,7 @@ class Users extends React.Component {
   };
 }
 
-class UserTable extends React.Component {
+class UserTable extends React.PureComponent {
   componentDidMount() {
     logEvent('UserTable\t\t did mount');
   }
@@ -137,8 +124,8 @@ class UserTable extends React.Component {
             </tr>
           </thead>
           <tbody>
-            {users.map((user, index) => (
-              <UserTableRow user={user} key={index} onEditUser={onEditUser} />
+            {users.map((user) => (
+              <UserTableRow user={user} key={user.id} onEditUser={onEditUser} />
             ))}
           </tbody>
         </table>
@@ -161,7 +148,17 @@ class UserTableRow extends React.Component {
   componentWillUnmount() {
     logEvent('UserTableRow\t will unmount with id=' + this.props.user.id);
   }
-
+  
+  shouldComponentUpdate(nextProps) {
+    const watchFields = ['surname', 'firstName', 'dateOfBirth']
+    for (const field of watchFields) {
+      if (this.props[field] !== nextProps[field]) {
+        return true
+      }
+    }
+    return false
+  }
+  
   render() {
     const { user } = this.props;
     logEvent('UserTableRow\t render with id=' + user.id);

@@ -50,6 +50,10 @@ import Timer from './Timer';
        Используй ее!
  */
 
+
+const CurrentTimeContext = React.createContext(null)
+export const ThemeContext = themes.Context//React.createContext(themes.red)
+
 class ColorsOfTime extends React.Component {
   constructor(props) {
     super(props);
@@ -67,19 +71,26 @@ class ColorsOfTime extends React.Component {
     this.props.timer.removeUpdated(this.handleTimerUpdated);
   }
 
+  changeTimePrev = () => this.dispatchChangeTheme('prev')
+  changeTimeNext = () => this.dispatchChangeTheme('next')
+  
   render() {
     const { currentTime, theme } = this.state;
     return (
-      <div className="page">
-        <h1>Цвета времени</h1>
-        <Top
-          theme={theme}
-          onPrevTheme={() => this.dispatchChangeTheme('prev')}
-          onNextTheme={() => this.dispatchChangeTheme('next')}
-        />
-        <Middle currentTime={currentTime} theme={theme} />
-        <Bottom currentTime={currentTime} />
-      </div>
+      <ThemeContext.Provider value={theme}>
+        <CurrentTimeContext.Provider value={currentTime}>
+          <div className="page">
+            <h1>Цвета времени</h1>
+            <Top
+              onPrevTheme={this.changeTimePrev}
+              onNextTheme={this.changeTimeNext}
+            />
+            <Middle />
+            <Bottom />
+          </div>
+        </CurrentTimeContext.Provider>
+      </ThemeContext.Provider>
+      
     );
   }
 
@@ -105,69 +116,77 @@ ColorsOfTime.propTypes = {
   timer: PropTypes.object
 };
 
+const ThemedButton = themes.withTheme(Button)
+
 class Top extends React.PureComponent {
   render() {
     registerRenderForDebug('Top');
-    const { theme, onPrevTheme, onNextTheme } = this.props;
+    const { onPrevTheme, onNextTheme } = this.props;
     return (
       <div className="block">
-        <Button value="← цвет" theme={theme} onClick={onPrevTheme} />
-        <Button value="цвет →" theme={theme} onClick={onNextTheme} />
+        <ThemedButton value="← цвет" onClick={onPrevTheme} />
+        <ThemedButton value="цвет →" onClick={onNextTheme} />
+        <Card title="Серый Лондон" timezone={+0} />
+        <Card
+          title="Синий Нью-Йорк"
+          timezone={-4}
+          color="blue"
+        />
+        <Card
+          title="Зеленый Париж"
+          timezone={+2}
+          color="green"
+        />
+        <Card
+          title="Красный Пекин"
+          timezone={+8}
+          color="red"
+        />
       </div>
     );
   }
 }
 
 Top.propTypes = {
-  theme: PropTypes.object.isRequired,
   onPrevTheme: PropTypes.func,
   onNextTheme: PropTypes.func
 };
 
 class Middle extends React.PureComponent {
   render() {
-    const { currentTime, theme } = this.props;
     return (
       <div className="block">
-        <Card
-          title="Цветное локальное"
-          currentTime={currentTime}
-          color={theme.foregroundColor}
-        />
-        <Card title="Серый Лондон" timezone={+0} currentTime={currentTime} />
+        <Card title="Цветное локальное" />
+        {/*<Card title="Серый Лондон" timezone={+0} />*/}
       </div>
     );
   }
 }
 
 Middle.propTypes = {
-  theme: PropTypes.object.isRequired,
+  theme: PropTypes.object,
   currentTime: PropTypes.object
 };
 
 class Bottom extends React.PureComponent {
   render() {
-    const { currentTime } = this.props;
     return (
       <div className="block">
-        <Card
-          title="Синий Нью-Йорк"
-          timezone={-4}
-          currentTime={currentTime}
-          color="blue"
-        />
-        <Card
-          title="Зеленый Париж"
-          timezone={+2}
-          currentTime={currentTime}
-          color="green"
-        />
-        <Card
-          title="Красный Пекин"
-          timezone={+8}
-          currentTime={currentTime}
-          color="red"
-        />
+        {/*<Card*/}
+        {/*  title="Синий Нью-Йорк"*/}
+        {/*  timezone={-4}*/}
+        {/*  color="blue"*/}
+        {/*/>*/}
+        {/*<Card*/}
+        {/*  title="Зеленый Париж"*/}
+        {/*  timezone={+2}*/}
+        {/*  color="green"*/}
+        {/*/>*/}
+        {/*<Card*/}
+        {/*  title="Красный Пекин"*/}
+        {/*  timezone={+8}*/}
+        {/*  color="red"*/}
+        {/*/>*/}
       </div>
     );
   }
@@ -180,17 +199,23 @@ Bottom.propTypes = {
 class Card extends React.PureComponent {
   render() {
     registerRenderForDebug('Card');
-    const { title, timezone, currentTime, color } = this.props;
+    const { title, timezone, color } = this.props;
     return (
       <div className="card">
         <h3>{title}</h3>
         <div>
-          <TimeDisplay
-            time={
-              timezone ? helpers.toTimezone(currentTime, timezone) : currentTime
-            }
-            color={color}
-          />
+          <ThemeContext.Consumer>
+            {theme => <CurrentTimeContext.Consumer>
+              {currentTime => <TimeDisplay
+                time={
+                  timezone ? helpers.toTimezone(currentTime, timezone) : currentTime
+                }
+                color={color || theme.foregroundColor}
+              />}
+            </CurrentTimeContext.Consumer>}
+          </ThemeContext.Consumer>
+         
+          
         </div>
       </div>
     );

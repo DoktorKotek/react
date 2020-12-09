@@ -12,6 +12,36 @@ import './styles.css';
 const RUBLES_IN_ONE_EURO = 70;
 
 class MoneyConverter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      rub: 0,
+      eur: 0,
+    }
+    
+    this.rate = RUBLES_IN_ONE_EURO
+  }
+  componentDidMount() {
+    fetch('https://api.exchangeratesapi.io/latest')
+      .then(res => res.json())
+      .then(res => {
+        this.rate = res.rates.RUB || this.rate
+      })
+  }
+  
+  convert = ({ rub, eur }) => {
+    if (Number.isFinite(rub)) {
+      this.setState({
+        rub,
+        eur: rub / this.rate,
+      })
+    } else if (Number.isFinite(eur)) {
+      this.setState({
+        eur,
+        rub: eur * this.rate,
+      })
+    }
+  }
   render() {
     return (
       <div className="root">
@@ -19,9 +49,15 @@ class MoneyConverter extends React.Component {
           <h2>Конвертер валют</h2>
           <div>
             <span>&#8381;</span>
-            <Money />
+            <Money
+              value={this.state.rub}
+              onValueChange={rub => this.convert({ rub })}
+            />
             &mdash;
-            <Money />
+            <Money
+              value={this.state.eur}
+              onValueChange={eur => this.convert({ eur })}
+            />
             <span>&euro;</span>
           </div>
         </div>
@@ -30,31 +66,23 @@ class MoneyConverter extends React.Component {
   }
 }
 
-class Money extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: 0
-    };
-  }
-
-  render() {
-    return (
-      <input
-        type="text"
-        value={this.state.value}
-        onChange={this.handleChangeValue}
-      />
-    );
-  }
-
-  handleChangeValue = event => {
-    const value = extractNumberString(event.target.value);
-    this.setState({ value });
-  };
+function Money(props) {
+  const { value, onValueChange } = props
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(event) => {
+        const value = extractNumberString(event.target.value)
+        onValueChange(Number(value))
+      }}
+    />
+  )
 }
-
-Money.propTypes = {};
+Money.propTypes = {
+  value: PropTypes.number.isRequired,
+  onValueChange: PropTypes.func.isRequired,
+}
 
 function extractNumberString(value) {
   const str = value.replace(/^0+/g, '').replace(/[^\.0-9]/g, '');

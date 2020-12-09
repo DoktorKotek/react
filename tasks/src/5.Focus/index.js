@@ -17,19 +17,24 @@ import './styles.css';
 class InputFormRow extends React.Component {
   constructor(props) {
     super(props);
+    this.inputRef = React.createRef()
   }
 
   render() {
     const { label, ...rest } = this.props;
     return (
-      <div className="row" onClick={this.handleClick}>
+      <div className="row pointer" onClick={this.handleClick}>
         <div className="label">{label}</div>
-        <input {...rest} />
+        <input ref={this.inputRef} {...rest} />
       </div>
     );
   }
 
-  handleClick = () => {};
+  handleClick = () => {
+    if (this.inputRef.current) {
+      this.inputRef.current.focus()
+    }
+  };
 }
 
 InputFormRow.propTypes = {

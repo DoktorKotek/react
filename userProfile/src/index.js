@@ -1,4 +1,12 @@
+import React from "react";
+import ReactDom from "react-dom";
 import './style.css';
+import { App } from './app'
+
+ReactDom.render(
+  <App/>,
+  document.getElementById('app')
+);
 
 /**
  *  Итак, перед тобой пустой проект. Давай его чем-то заполним. Не стесняйся подсматривать в уже сделанные задачи,
